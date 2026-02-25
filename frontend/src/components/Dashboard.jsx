@@ -2,6 +2,7 @@ import { useReducer, useCallback, useState } from "react";
 import { useSSE } from "../hooks/useSSE";
 import { simulateTransactions, toggleAutoSimulate, fetchTransactions, fetchMetrics } from "../lib/api";
 import TransactionFeed from "./TransactionFeed";
+import AcquirerMetrics from "./AcquirerMetrics";
 
 function reducer(state, action) {
   switch (action.type) {
@@ -77,6 +78,8 @@ export default function Dashboard({ onSelectTransaction }) {
           {state.transactions.length} transactions
         </span>
       </div>
+
+      <AcquirerMetrics metrics={state.metrics} />
 
       <TransactionFeed
         transactions={state.transactions}
