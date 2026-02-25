@@ -1,6 +1,6 @@
-import { useReducer, useCallback, useState } from "react";
+import { useReducer, useCallback, useState, useEffect } from "react";
 import { useSSE } from "../hooks/useSSE";
-import { simulateTransactions, toggleAutoSimulate } from "../lib/api";
+import { simulateTransactions, toggleAutoSimulate, fetchTransactions, fetchMetrics } from "../lib/api";
 import TransactionFeed from "./TransactionFeed";
 import AcquirerMetrics from "./AcquirerMetrics";
 import AlertBanner from "./AlertBanner";
@@ -43,6 +43,15 @@ export default function Dashboard({ onSelectTransaction }) {
 
   useSSE(handleTransaction, handleMetrics);
 
+  useEffect(() => {
+    fetchTransactions({ limit: 50 }).then((txs) => {
+      if (Array.isArray(txs)) dispatch({ type: "SET_TRANSACTIONS", payload: txs });
+    }).catch(console.error);
+    fetchMetrics().then((m) => {
+      if (Array.isArray(m)) dispatch({ type: "SET_METRICS", payload: m });
+    }).catch(console.error);
+  }, []);
+
   async function handleSimulate() {
     setSimulating(true);
     try {
@@ -53,13 +62,17 @@ export default function Dashboard({ onSelectTransaction }) {
   }
 
   async function handleToggleAuto() {
-    const res = await toggleAutoSimulate();
-    dispatch({ type: "SET_AUTO", payload: res.auto });
+    try {
+      const res = await toggleAutoSimulate();
+      dispatch({ type: "SET_AUTO", payload: res.auto });
+    } catch (err) {
+      console.error("Failed to toggle auto-simulate:", err);
+    }
   }
 
   const filtered = state.transactions.filter((tx) => {
     if (filters.status && tx.status !== filters.status) return false;
-    if (filters.acquirer && !tx.attempts.some((a) => a.acquirer === filters.acquirer))
+    if (filters.acquirer && !(tx.attempts || []).some((a) => a.acquirer === filters.acquirer))
       return false;
     return true;
   });

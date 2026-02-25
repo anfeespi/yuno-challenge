@@ -121,7 +121,9 @@ func (a *API) GetTransaction(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	tx := a.Store.GetByID(id)
 	if tx == nil {
-		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(`{"error":"not found"}`))
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")

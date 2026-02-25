@@ -53,7 +53,7 @@ func SimulateTransaction() *models.Transaction {
 	for i := 0; i < maxAttempts; i++ {
 		profile := routingOrder[i]
 
-		startedAt := time.Now().UTC().Format(time.RFC3339Nano)
+		startedAt := time.Now().UTC()
 
 		roll := rand.Float64()
 
@@ -73,7 +73,7 @@ func SimulateTransaction() *models.Transaction {
 
 		responseTimeMs := rand.Intn(profile.MaxLatencyMs-profile.MinLatencyMs) + profile.MinLatencyMs
 
-		endedAt := time.Now().UTC().Format(time.RFC3339Nano)
+		endedAt := startedAt.Add(time.Duration(responseTimeMs) * time.Millisecond)
 
 		attempt := models.Attempt{
 			Acquirer:       profile.Name,
@@ -81,8 +81,8 @@ func SimulateTransaction() *models.Transaction {
 			ErrorCode:      errorCode,
 			ErrorMessage:   errorMessage,
 			ResponseTimeMs: responseTimeMs,
-			StartedAt:      startedAt,
-			EndedAt:        endedAt,
+			StartedAt:      startedAt.Format(time.RFC3339Nano),
+			EndedAt:        endedAt.Format(time.RFC3339Nano),
 		}
 
 		tx.Attempts = append(tx.Attempts, attempt)

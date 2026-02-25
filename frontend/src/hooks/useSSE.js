@@ -1,25 +1,37 @@
 import { useEffect, useRef } from "react";
 
 export function useSSE(onTransaction, onMetrics) {
+  const onTxRef = useRef(onTransaction);
+  const onMetricsRef = useRef(onMetrics);
   const esRef = useRef(null);
 
+  useEffect(() => { onTxRef.current = onTransaction; }, [onTransaction]);
+  useEffect(() => { onMetricsRef.current = onMetrics; }, [onMetrics]);
+
   useEffect(() => {
+    let cancelled = false;
+
     function connect() {
+      if (cancelled) return;
       const es = new EventSource("/api/stream");
       esRef.current = es;
 
       es.addEventListener("transaction", (e) => {
         try {
           const tx = JSON.parse(e.data);
-          onTransaction(tx);
-        } catch {}
+          onTxRef.current(tx);
+        } catch (err) {
+          console.warn("Failed to parse SSE transaction event:", err);
+        }
       });
 
       es.addEventListener("metrics", (e) => {
         try {
           const m = JSON.parse(e.data);
-          onMetrics(m);
-        } catch {}
+          onMetricsRef.current(m);
+        } catch (err) {
+          console.warn("Failed to parse SSE metrics event:", err);
+        }
       });
 
       es.addEventListener("connected", () => {
@@ -28,13 +40,14 @@ export function useSSE(onTransaction, onMetrics) {
 
       es.onerror = () => {
         es.close();
-        setTimeout(connect, 3000);
+        if (!cancelled) setTimeout(connect, 3000);
       };
     }
 
     connect();
 
     return () => {
+      cancelled = true;
       if (esRef.current) {
         esRef.current.close();
       }

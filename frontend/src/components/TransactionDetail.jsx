@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import StatusBadge from "./StatusBadge";
 
 function AttemptNode({ attempt, isLast }) {
@@ -40,6 +41,13 @@ function AttemptNode({ attempt, isLast }) {
 }
 
 export default function TransactionDetail({ transaction, onClose }) {
+  useEffect(() => {
+    if (!transaction) return;
+    const handler = (e) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [transaction, onClose]);
+
   if (!transaction) return null;
 
   const tx = transaction;

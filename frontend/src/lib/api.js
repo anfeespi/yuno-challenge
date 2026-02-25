@@ -1,40 +1,43 @@
 const BASE = "/api";
 
-export async function fetchHealth() {
-  const res = await fetch(`${BASE}/health`);
+async function apiCall(url, options) {
+  const res = await fetch(url, options);
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`API ${res.status}: ${body}`);
+  }
   return res.json();
 }
 
+export async function fetchHealth() {
+  return apiCall(`${BASE}/health`);
+}
+
 export async function simulateTransactions(count = 1) {
-  const res = await fetch(`${BASE}/simulate`, {
+  return apiCall(`${BASE}/simulate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ count }),
   });
-  return res.json();
 }
 
 export async function toggleAutoSimulate() {
-  const res = await fetch(`${BASE}/simulate/auto`, { method: "POST" });
-  return res.json();
+  return apiCall(`${BASE}/simulate/auto`, { method: "POST" });
 }
 
 export async function fetchTransactions({ status, acquirer, limit, offset } = {}) {
   const params = new URLSearchParams();
   if (status) params.set("status", status);
   if (acquirer) params.set("acquirer", acquirer);
-  if (limit) params.set("limit", String(limit));
-  if (offset) params.set("offset", String(offset));
-  const res = await fetch(`${BASE}/transactions?${params}`);
-  return res.json();
+  if (limit != null && limit > 0) params.set("limit", String(limit));
+  if (offset != null && offset > 0) params.set("offset", String(offset));
+  return apiCall(`${BASE}/transactions?${params}`);
 }
 
 export async function fetchTransaction(id) {
-  const res = await fetch(`${BASE}/transactions/${id}`);
-  return res.json();
+  return apiCall(`${BASE}/transactions/${id}`);
 }
 
 export async function fetchMetrics() {
-  const res = await fetch(`${BASE}/metrics`);
-  return res.json();
+  return apiCall(`${BASE}/metrics`);
 }
