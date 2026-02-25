@@ -3,6 +3,8 @@ import { useSSE } from "../hooks/useSSE";
 import { simulateTransactions, toggleAutoSimulate, fetchTransactions, fetchMetrics } from "../lib/api";
 import TransactionFeed from "./TransactionFeed";
 import AcquirerMetrics from "./AcquirerMetrics";
+import AlertBanner from "./AlertBanner";
+import FilterBar from "./FilterBar";
 
 function reducer(state, action) {
   switch (action.type) {
@@ -29,6 +31,7 @@ export default function Dashboard({ onSelectTransaction }) {
     autoOn: false,
   });
   const [simulating, setSimulating] = useState(false);
+  const [filters, setFilters] = useState({ status: "", acquirer: "" });
 
   const handleTransaction = useCallback((tx) => {
     dispatch({ type: "ADD_TRANSACTION", payload: tx });
@@ -79,10 +82,18 @@ export default function Dashboard({ onSelectTransaction }) {
         </span>
       </div>
 
+      <AlertBanner metrics={state.metrics} />
+
       <AcquirerMetrics metrics={state.metrics} />
 
+      <FilterBar filters={filters} onChange={setFilters} />
+
       <TransactionFeed
-        transactions={state.transactions}
+        transactions={state.transactions.filter((tx) => {
+          if (filters.status && tx.status !== filters.status) return false;
+          if (filters.acquirer && !tx.attempts.some((a) => a.acquirer === filters.acquirer)) return false;
+          return true;
+        })}
         onSelect={onSelectTransaction}
       />
     </div>
