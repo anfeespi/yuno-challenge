@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Dashboard from "./components/Dashboard";
+import TransactionDetail from "./components/TransactionDetail";
 
 export default function App() {
   const [selectedTx, setSelectedTx] = useState(null);
@@ -15,6 +16,10 @@ export default function App() {
       <main className="p-6">
         <Dashboard onSelectTransaction={setSelectedTx} />
       </main>
+      <TransactionDetail
+        transaction={selectedTx}
+        onClose={() => setSelectedTx(null)}
+      />
     </div>
   );
 }
