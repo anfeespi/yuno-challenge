@@ -1,16 +1,46 @@
-const statusStyles = {
-  approved: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
-  failed: "bg-red-500/20 text-red-400 border-red-500/30",
-  timeout: "bg-amber-500/20 text-amber-400 border-amber-500/30",
-  declined: "bg-red-500/20 text-red-400 border-red-500/30",
+const config = {
+  approved: {
+    bg: "bg-emerald-500/15",
+    text: "text-emerald-400",
+    border: "border-emerald-500/25",
+    dot: "bg-emerald-400",
+  },
+  failed: {
+    bg: "bg-red-500/15",
+    text: "text-red-400",
+    border: "border-red-500/25",
+    dot: "bg-red-400",
+  },
+  timeout: {
+    bg: "bg-amber-500/15",
+    text: "text-amber-400",
+    border: "border-amber-500/25",
+    dot: "bg-amber-400",
+  },
+  declined: {
+    bg: "bg-rose-500/15",
+    text: "text-rose-400",
+    border: "border-rose-500/25",
+    dot: "bg-rose-400",
+  },
 };
 
-export default function StatusBadge({ status }) {
-  const style = statusStyles[status] || "bg-gray-500/20 text-gray-400 border-gray-500/30";
+const fallback = {
+  bg: "bg-gray-500/15",
+  text: "text-gray-400",
+  border: "border-gray-500/25",
+  dot: "bg-gray-400",
+};
+
+export default function StatusBadge({ status, size = "sm" }) {
+  const c = config[status] || fallback;
+  const sizeClass = size === "lg" ? "px-3 py-1 text-xs" : "px-2 py-0.5 text-[11px]";
+
   return (
     <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${style}`}
+      className={`inline-flex items-center gap-1.5 rounded-full font-semibold border ${sizeClass} ${c.bg} ${c.text} ${c.border}`}
     >
+      <span className={`w-1.5 h-1.5 rounded-full ${c.dot}`} />
       {status}
     </span>
   );

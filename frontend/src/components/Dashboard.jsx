@@ -1,6 +1,6 @@
 import { useReducer, useCallback, useState } from "react";
 import { useSSE } from "../hooks/useSSE";
-import { simulateTransactions, toggleAutoSimulate, fetchTransactions, fetchMetrics } from "../lib/api";
+import { simulateTransactions, toggleAutoSimulate } from "../lib/api";
 import TransactionFeed from "./TransactionFeed";
 import AcquirerMetrics from "./AcquirerMetrics";
 import AlertBanner from "./AlertBanner";
@@ -57,45 +57,62 @@ export default function Dashboard({ onSelectTransaction }) {
     dispatch({ type: "SET_AUTO", payload: res.auto });
   }
 
+  const filtered = state.transactions.filter((tx) => {
+    if (filters.status && tx.status !== filters.status) return false;
+    if (filters.acquirer && !tx.attempts.some((a) => a.acquirer === filters.acquirer))
+      return false;
+    return true;
+  });
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <button
-          onClick={handleSimulate}
-          disabled={simulating}
-          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 rounded-lg text-sm font-medium transition-colors cursor-pointer"
-        >
-          {simulating ? "Simulating..." : "Simulate 5"}
-        </button>
-        <button
-          onClick={handleToggleAuto}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
-            state.autoOn
-              ? "bg-red-600 hover:bg-red-500"
-              : "bg-emerald-600 hover:bg-emerald-500"
-          }`}
-        >
-          {state.autoOn ? "Stop Auto" : "Start Auto"}
-        </button>
-        <span className="text-sm text-gray-500">
+    <div className="space-y-8">
+      {/* Controls */}
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleSimulate}
+            disabled={simulating}
+            className="group relative px-5 py-2.5 bg-volt-600 hover:bg-volt-500 disabled:opacity-50 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer shadow-lg shadow-volt-500/20 hover:shadow-volt-500/30"
+          >
+            <span className="relative z-10">
+              {simulating ? "Simulating..." : "Simulate 5"}
+            </span>
+          </button>
+          <button
+            onClick={handleToggleAuto}
+            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer ${
+              state.autoOn
+                ? "bg-red-500/15 text-red-400 border border-red-500/30 hover:bg-red-500/25"
+                : "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25"
+            }`}
+          >
+            {state.autoOn ? "Stop Auto" : "Start Auto"}
+          </button>
+        </div>
+        <span className="text-sm font-medium text-gray-500 font-mono">
           {state.transactions.length} transactions
         </span>
       </div>
 
+      {/* Alerts */}
       <AlertBanner metrics={state.metrics} />
 
+      {/* Metrics */}
       <AcquirerMetrics metrics={state.metrics} />
 
-      <FilterBar filters={filters} onChange={setFilters} />
-
-      <TransactionFeed
-        transactions={state.transactions.filter((tx) => {
-          if (filters.status && tx.status !== filters.status) return false;
-          if (filters.acquirer && !tx.attempts.some((a) => a.acquirer === filters.acquirer)) return false;
-          return true;
-        })}
-        onSelect={onSelectTransaction}
-      />
+      {/* Feed section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
+            Transaction Feed
+          </h2>
+          <FilterBar filters={filters} onChange={setFilters} />
+        </div>
+        <TransactionFeed
+          transactions={filtered}
+          onSelect={onSelectTransaction}
+        />
+      </div>
     </div>
   );
 }
